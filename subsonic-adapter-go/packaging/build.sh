@@ -65,6 +65,8 @@ build_binary() {
 # ---------- 2. 打 deb ----------
 build_deb() {
   log "构建 deb"
+  # Debian 版本号不能以字母开头，去掉可能的 'v' 前缀
+  DEB_VERSION="${VERSION#v}"
   DEB_ROOT="$BUILD_DIR/deb-root"
   rm -rf "$DEB_ROOT"
   mkdir -p "$DEB_ROOT/DEBIAN"
@@ -121,7 +123,7 @@ EOF
 
   # changelog：Debian 要求 native 包必须有
   cat >"$DEB_ROOT/usr/share/doc/$PKG_NAME/changelog" <<EOF
-$PKG_NAME ($VERSION) unstable; urgency=medium
+$PKG_NAME ($DEB_VERSION) unstable; urgency=medium
 
   * Release $VERSION.
 
@@ -140,7 +142,7 @@ EOF
   SIZE_KB=$(du -sk "$DEB_ROOT" | cut -f1)
   cat >"$DEB_ROOT/DEBIAN/control" <<EOF
 Package: $PKG_NAME
-Version: $VERSION
+Version: $DEB_VERSION
 Section: sound
 Priority: optional
 Architecture: $ARCH_DEB
@@ -209,7 +211,7 @@ EOF
   # 脚本必须保留可执行位，否则无法作为 autostart 的 Exec 目标。
   chmod 0755 "$DEB_ROOT/usr/share/$PKG_NAME/launch.sh"
 
-  DEB_FILE="$DIST_DIR/${PKG_NAME}_${VERSION}_${ARCH_DEB}.deb"
+  DEB_FILE="$DIST_DIR/${PKG_NAME}_${DEB_VERSION}_${ARCH_DEB}.deb"
   dpkg-deb --root-owner-group --build "$DEB_ROOT" "$DEB_FILE" >/dev/null
   log "已生成: $DEB_FILE"
 }
