@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Subsonic Adapter
+Name[zh_CN]=Subsonic 适配器
+GenericName=Subsonic Gateway
+GenericName[zh_CN]=Subsonic 网关
+Comment=QQ Music to Subsonic gateway with web admin
+Comment[zh_CN]=QQ 音乐转 Subsonic 网关（含网页管理）
+Exec=subsonic-adapter-go
+Icon=subsonic-adapter
+Terminal=false
+Categories=AudioVideo;Audio;Player;GTK;
+StartupNotify=true
+Keywords=subsonic;qq;music;

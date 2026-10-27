@@ -1,0 +1,47 @@
+.TH SUBSONIC-ADAPTER 1 "2026-10-26" "subsonic-adapter 0.1.0" "User Commands"
+.SH NAME
+subsonic-adapter-go \- 将 QQ 音乐 API 上游包装为 Subsonic 兼容服务
+.SH SYNOPSIS
+.B subsonic-adapter-go
+.RI [ options ]
+.SH DESCRIPTION
+.B subsonic-adapter-go
+是一个轻量网关，把用户自行部署的 QQ 音乐 API 上游转换为 Subsonic 协议，
+供 Subsonic 客户端浏览与播放。内置网页管理页面，用于扫码登录、配置上游地址、
+查看运行状态与管理服务。
+.PP
+启动后默认监听 4535 端口；若该端口被占用会自动顺延，并把结果记录在
+.IR ~/.config/subsonic-adapter/port 。
+.SH ENVIRONMENT
+.TP
+.B PORT
+指定监听端口。显式设置时若端口被占用会直接报错，不会自动更换。
+.TP
+.B UPSTREAM_URL
+上游 QQ 音乐 API 地址，默认
+.IR http://127.0.0.1:3200 。
+.TP
+.B HOST
+监听地址，默认
+.IR 0.0.0.0 。
+.TP
+.B NO_BROWSER
+设为 1 时启动不自动打开浏览器，适合 systemd 或后台运行。
+.TP
+.B UPSTREAM_TIMEOUT_MS
+请求上游的超时时间（毫秒），默认 15000。
+.SH FILES
+.TP
+.I ~/.config/subsonic-adapter/port
+上次成功监听的端口，下次启动优先复用。
+.TP
+.I ~/.local/state/subsonic-adapter/adapter.log
+由
+.B launch.sh
+启动时的运行日志。
+.TP
+.I ~/.config/autostart/subsonic-adapter.desktop
+在管理页开启「开机自动启动」后生成的 XDG 自启条目。
+.SH SEE ALSO
+管理页面：
+.B http://127.0.0.1:4535/

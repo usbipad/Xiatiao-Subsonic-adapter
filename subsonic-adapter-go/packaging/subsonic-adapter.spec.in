@@ -1,0 +1,69 @@
+Name:           subsonic-adapter
+Version:        @VERSION@
+Release:        1%{?dist}
+Summary:        QQ Music to Subsonic gateway
+License:        MIT
+URL:            https://github.com/usbipad/xiatiao-player
+BuildArch:      x86_64
+Requires:       xdg-utils
+
+# 二进制以静态链接方式随源码包提供，此处无需编译器依赖。
+# 关闭自动依赖生成，避免 rpmbuild 从静态二进制里扫描出误报的库依赖。
+AutoReqProv:    no
+
+%description
+A lightweight gateway that exposes a QQ Music API upstream as a
+Subsonic-compatible server, so Subsonic clients can browse and play from it.
+Ships with a local web admin page for login, upstream and startup settings.
+The binary is statically linked and has no runtime library deps.
+
+%prep
+%setup -q
+
+%build
+# 预编译二进制随源码包提供，无需在此编译。
+
+%install
+mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_datadir}/applications
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user
+mkdir -p %{buildroot}%{_datadir}/subsonic-adapter
+install -m 0755 @BIN_NAME@ %{buildroot}%{_bindir}/@BIN_NAME@
+install -m 0755 launch.sh %{buildroot}%{_datadir}/subsonic-adapter/launch.sh
+install -m 0644 subsonic-adapter.desktop %{buildroot}%{_datadir}/applications/subsonic-adapter.desktop
+install -m 0644 subsonic-adapter.service %{buildroot}%{_prefix}/lib/systemd/user/subsonic-adapter.service
+
+# 图标：安装到 hicolor 主题各尺寸目录
+for size in 16 24 32 48 64 128 256 512 1024; do
+  mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${size}x${size}/apps
+  install -m 0644 icons/subsonic-adapter-${size}.png \
+    %{buildroot}%{_datadir}/icons/hicolor/${size}x${size}/apps/subsonic-adapter.png
+done
+
+%post
+# 刷新图标缓存（失败不阻塞安装）
+/usr/bin/gtk-update-icon-cache -f -t %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
+/usr/bin/update-desktop-database %{_datadir}/applications >/dev/null 2>&1 || :
+
+%postun
+/usr/bin/gtk-update-icon-cache -f -t %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
+/usr/bin/update-desktop-database %{_datadir}/applications >/dev/null 2>&1 || :
+
+%files
+%{_bindir}/@BIN_NAME@
+%{_datadir}/subsonic-adapter/launch.sh
+%{_datadir}/applications/subsonic-adapter.desktop
+%{_prefix}/lib/systemd/user/subsonic-adapter.service
+%{_datadir}/icons/hicolor/16x16/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/24x24/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/32x32/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/48x48/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/64x64/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/128x128/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/256x256/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/512x512/apps/subsonic-adapter.png
+%{_datadir}/icons/hicolor/1024x1024/apps/subsonic-adapter.png
+
+%changelog
+* Mon Oct 26 2026 Subsonic Adapter <noreply@example.com> - @VERSION@-1
+- Initial package

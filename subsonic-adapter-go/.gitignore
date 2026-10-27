@@ -1,0 +1,11 @@
+# 构建产物
+subsonic-adapter-go
+/dist/
+
+# 运行态文件（含登录会话，切勿入库）
+.adapter-session
+adapter.log
+
+# 临时文件
+*.bak
+*.tmp

@@ -1,0 +1,17 @@
+[Unit]
+Description=Subsonic Adapter (QQ Music to Subsonic gateway)
+Documentation=http://127.0.0.1:4535/
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/subsonic-adapter-go
+Restart=on-failure
+RestartSec=3
+# 工作目录固定到家目录，避免相对路径在不同启动方式下解析出不同结果。
+WorkingDirectory=%h
+# 服务运行时不自动打开浏览器
+Environment=NO_BROWSER=1
+
+[Install]
+WantedBy=default.target

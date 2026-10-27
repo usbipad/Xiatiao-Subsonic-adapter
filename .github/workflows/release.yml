@@ -1,0 +1,55 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }} packages
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: subsonic-adapter-go/go.sum
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          # dpkg-dev 用于 dpkg-deb，rpm 用于 rpmbuild
+          sudo apt-get install -y dpkg-dev rpm
+
+      - name: Build packages
+        working-directory: subsonic-adapter-go
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          chmod +x packaging/build.sh
+          # 构建 deb 和 rpm 包
+          ./packaging/build.sh all
+
+      - name: Upload DEB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: subsonic-adapter-${{ matrix.arch }}-deb
+          path: subsonic-adapter-go/dist/*.deb
+          if-no-files-found: error
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: subsonic-adapter-${{ matrix.arch }}-rpm
+          path: subsonic-adapter-go/dist/*.rpm
+          if-no-files-found: error
