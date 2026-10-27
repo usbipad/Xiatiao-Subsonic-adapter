@@ -1,0 +1,9 @@
+# 第三方插件/脚本（如音乐源）
+cr-music-source-paid-*.js
+
+# 旧版本/备份目录
+Xiatiao-SubsonicAPI/
+
+# 系统文件
+.DS_Store
+Thumbs.db
