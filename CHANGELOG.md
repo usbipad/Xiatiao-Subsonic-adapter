@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 *   **便捷安装**：提供 `.deb` (Debian/Ubuntu) 和 `.rpm` (Fedora/RHEL) 安装包。
 *   **静态编译**：无外部依赖，单二进制文件即可运行，资源占用极低。
 *   **Web 管理页**：内置本地 Web 界面，方便配置上游地址与登录状态。
+*   **播放更顺**：音频代理复用进程级 HTTP 连接，seek 与断流重连不再
+    每次重新与上游建连（此前 TTFB 呈 0.2s~15.7s 双峰分布，用户会听到数秒静音）。
 
 ### 📦 安装包说明
 
