@@ -31,7 +31,10 @@
 
 1. `amd64` / `arm64` 两个矩阵任务各自交叉编译并打出 deb + rpm；
 2. 每个任务上传 `subsonic-adapter-<arch>-deb` / `-rpm` artifact；
-3. tag 触发时，`release` 任务汇总所有包、生成 `SHA256SUMS.txt` 并发布到对应 GitHub Release。
+3. tag 触发时，`release` 任务汇总所有包、生成 `SHA256SUMS.txt`，并把 `CHANGELOG.md` 中对应版本的小节作为 Release 正文（附安装说明）发布。
+
+> Release 正文取自 `CHANGELOG.md`，因此发版前请确保存在形如 `## [v1.2.3] - 2026-10-27` 的小节，版本号与 tag 一致。
+> 若该小节缺失，正文会退化为一句提示；此时补上 CHANGELOG 后重新推送 tag（`git tag -f v1.2.3 && git push -f origin refs/tags/v1.2.3`）即可刷新已有的 Release。
 
 因此打一个正式版本只需要：
 
