@@ -43,6 +43,34 @@ git push origin v1.0.0
 
 > 更多详细的使用说明、启动方式及配置指南，请参阅 [subsonic-adapter-go/README.md](subsonic-adapter-go/README.md)。
 
+## 💻 安装与使用
+
+如果您已经通过 `.deb` 或 `.rpm` 包安装了本程序，可以通过以下方式使用：
+
+### 1. 命令行直接运行
+```bash
+subsonic-adapter-go
+```
+启动后，程序通常会自动在浏览器中打开本地 Web 管理页面。按 `Ctrl + C` 即可停止运行。
+
+### 2. 作为后台服务运行（🌟 推荐）
+安装包已内置 systemd 用户服务，适合在后台稳定运行：
+```bash
+# 启动服务
+systemctl --user start subsonic-adapter
+
+# 设置开机/登录自动启动
+systemctl --user enable subsonic-adapter
+
+# 查看运行状态与实时日志
+journalctl --user -u subsonic-adapter -f
+```
+
+### 3. 桌面环境启动
+在 Linux 桌面环境的应用菜单中搜索 **Subsonic Adapter**，点击图标即可启动并自动打开管理页面。
+
+> **💡 提示**：启动服务后，请先在 Web 管理页面配置上游 API 地址并完成授权，随后即可在虾条播放器或其他 Subsonic 客户端（如 Navidrome, Substreamer 等）中添加服务器地址进行播放。
+
 ## 📚 相关文档
 
 *   **[SUBSONIC_API.md](SUBSONIC_API.md)**: 虾条播放器与后端的接口契约，供开发者参考。
