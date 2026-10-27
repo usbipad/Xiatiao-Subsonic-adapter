@@ -245,10 +245,9 @@ build_rpm() {
   sed -e "s|@VERSION@|$VERSION|g" \
       -e "s|@DEB_VERSION@|$DEB_VERSION|g" \
       -e "s|@BIN_NAME@|$BIN_NAME|g" \
-      -e "s|@ARCH_RPM@|$ARCH_RPM|g" \
       "$SCRIPT_DIR/$PKG_NAME.spec.in" >"$TOP/SPECS/$PKG_NAME.spec"
 
-  rpmbuild --define "_topdir $TOP" -bb "$TOP/SPECS/$PKG_NAME.spec" >/dev/null
+  rpmbuild --define "_topdir $TOP" --target "$ARCH_RPM" -bb "$TOP/SPECS/$PKG_NAME.spec" >/dev/null
 
   RPM_FILE=$(find "$TOP/RPMS" -name "*.rpm" | head -n1)
   [ -n "$RPM_FILE" ] || err "rpm 构建产物未找到"
