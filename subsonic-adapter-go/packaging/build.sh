@@ -19,6 +19,20 @@ PKG_NAME="subsonic-adapter"
 BIN_NAME="subsonic-adapter-go"
 VERSION="${VERSION:-0.1.0}"
 
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+err() { printf '\033[1;31m错误:\033[0m %s\n' "$*" >&2; exit 1; }
+
+# 版本号统一在此规整：tag 触发时传入的是 v1.2.3，打包产物里不要这个前缀。
+VERSION="${VERSION#v}"
+[ -n "$VERSION" ] || err "版本号不能为空"
+case "$VERSION" in
+  [0-9]*) : ;;
+  *) err "版本号必须以数字开头（如 1.2.3），当前为: $VERSION" ;;
+esac
+DEB_VERSION="$VERSION"
+# RPM 的 Version 字段不允许 '-'：预发布版本 1.2.3-rc1 需写成 1.2.3_rc1
+RPM_VERSION=$(printf '%s' "$VERSION" | tr '-' '_')
+
 # 支持通过 TARGET_ARCH 环境变量指定目标架构，默认为 amd64
 TARGET_ARCH="${TARGET_ARCH:-amd64}"
 
@@ -45,9 +59,6 @@ GO_BIN="${GO_BIN:-$(command -v go || echo /home/faith/.local/go/bin/go)}"
 
 WHAT="${1:-all}"
 
-log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
-err() { printf '\033[1;31m错误:\033[0m %s\n' "$*" >&2; exit 1; }
-
 [ -x "$GO_BIN" ] || err "找不到 go 工具链（可用 GO_BIN=/path/to/go 指定）"
 
 # ---------- 1. 静态编译 ----------
@@ -65,8 +76,6 @@ build_binary() {
 # ---------- 2. 打 deb ----------
 build_deb() {
   log "构建 deb"
-  # Debian 版本号不能以字母开头，去掉可能的 'v' 前缀
-  DEB_VERSION="${VERSION#v}"
   DEB_ROOT="$BUILD_DIR/deb-root"
   rm -rf "$DEB_ROOT"
   mkdir -p "$DEB_ROOT/DEBIAN"
@@ -223,31 +232,36 @@ build_rpm() {
 
   TOP="$BUILD_DIR/rpmbuild"
   rm -rf "$TOP"
-  mkdir -p "$TOP"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+  # 注意：脚本是 POSIX sh（Ubuntu 上为 dash），不支持 {A,B} 花括号展开，
+  # 必须逐个建目录，否则 SOURCES 不存在会导致 tar 直接失败。
+  mkdir -p "$TOP/BUILD" "$TOP/RPMS" "$TOP/SOURCES" "$TOP/SPECS" "$TOP/SRPMS"
 
   # 准备 RPM 源码包内容
   STAGE="$BUILD_DIR/stage"
-  SRC_DIR="$STAGE/$PKG_NAME-$VERSION"
+  SRC_DIR="$STAGE/$PKG_NAME-$RPM_VERSION"
   rm -rf "$STAGE"
   mkdir -p "$SRC_DIR/icons"
-  
+
   install -m 0755 "$BUILD_DIR/$BIN_NAME" "$SRC_DIR/$BIN_NAME"
   install -m 0755 "$ROOT_DIR/launch.sh" "$SRC_DIR/launch.sh"
   install -m 0644 "$SCRIPT_DIR/$PKG_NAME.desktop" "$SRC_DIR/$PKG_NAME.desktop"
   install -m 0644 "$SCRIPT_DIR/$PKG_NAME.service" "$SRC_DIR/$PKG_NAME.service"
+  install -m 0644 "$SCRIPT_DIR/$PKG_NAME.1" "$SRC_DIR/$PKG_NAME.1"
   for size in 16 24 32 48 64 128 256 512 1024; do
     install -m 0644 "$SCRIPT_DIR/icons/$PKG_NAME-$size.png" "$SRC_DIR/icons/$PKG_NAME-$size.png"
   done
-  
-  # 生成 tar.gz，确保路径正确
-  tar -C "$STAGE" -czf "$TOP/SOURCES/$PKG_NAME-$VERSION.tar.gz" "$PKG_NAME-$VERSION"
 
-  sed -e "s|@VERSION@|$VERSION|g" \
-      -e "s|@DEB_VERSION@|$DEB_VERSION|g" \
+  # 生成 tar.gz；顶层目录名必须与 spec 的 %{name}-%{version} 完全一致，
+  # 否则 %setup 找不到目录会直接失败。
+  tar -C "$STAGE" -czf "$TOP/SOURCES/$PKG_NAME-$RPM_VERSION.tar.gz" "$PKG_NAME-$RPM_VERSION"
+
+  sed -e "s|@VERSION@|$RPM_VERSION|g" \
+      -e "s|@DEB_VERSION@|$RPM_VERSION|g" \
       -e "s|@BIN_NAME@|$BIN_NAME|g" \
       "$SCRIPT_DIR/$PKG_NAME.spec.in" >"$TOP/SPECS/$PKG_NAME.spec"
 
-  rpmbuild --define "_topdir $TOP" --target "$ARCH_RPM" -bb "$TOP/SPECS/$PKG_NAME.spec" >/dev/null
+  # 不吞掉 rpmbuild 输出：CI 日志里要能看到失败原因
+  rpmbuild --define "_topdir $TOP" --target "$ARCH_RPM" -bb "$TOP/SPECS/$PKG_NAME.spec"
 
   RPM_FILE=$(find "$TOP/RPMS" -name "*.rpm" | head -n1)
   [ -n "$RPM_FILE" ] || err "rpm 构建产物未找到"

@@ -21,6 +21,23 @@
 - deb：`dpkg-deb`
 - rpm：`rpmbuild`（Fedora 用 dnf install rpm-build；Debian 用 apt install rpm）
 
+`VERSION` 可以带 `v` 前缀（如 `v1.2.3`），脚本会自动去掉；Debian 要求版本号以数字开头，RPM 的版本字段不允许 `-`（`1.2.3-rc1` 会写成 `1.2.3_rc1`）。
+
+## GitHub Actions 自动打包
+
+`.github/workflows/release.yml` 在推送 `v*` tag 时触发，也可以手动 `workflow_dispatch` 并指定版本号（手动触发只产出 artifact，不发布 Release）。
+
+流程：
+
+1. `amd64` / `arm64` 两个矩阵任务各自交叉编译并打出 deb + rpm；
+2. 每个任务上传 `subsonic-adapter-<arch>-deb` / `-rpm` artifact；
+3. tag 触发时，`release` 任务汇总所有包、生成 `SHA256SUMS.txt` 并发布到对应 GitHub Release。
+
+因此打一个正式版本只需要：
+
+    git tag v1.2.3
+    git push origin v1.2.3
+
 ## 关于「一个包通吃」
 
 二进制以 `CGO_ENABLED=0` 静态编译，`ldd` 显示无动态依赖，因此同一个 deb/rpm 可以在任何现代 Linux 上运行，不受 glibc 版本影响。
@@ -68,6 +85,7 @@
 | `/usr/bin/subsonic-adapter-go` | 静态二进制 |
 | `/usr/share/applications/subsonic-adapter.desktop` | 应用菜单入口 |
 | `/usr/share/icons/hicolor/*/apps/subsonic-adapter.png` | 应用图标（9 种尺寸） |
+| `/usr/share/man/man1/subsonic-adapter-go.1.gz` | 手册页 |
 | `/usr/lib/systemd/user/subsonic-adapter.service` | systemd 用户服务（默认不启用） |
 
 ## 图标

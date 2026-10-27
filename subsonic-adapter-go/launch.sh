@@ -16,7 +16,12 @@ set -u
 DIR=$(cd "$(dirname "$0")" && pwd)
 cd "$DIR" || exit 1
 
+# 发行包里 launch.sh 装到 /usr/share/subsonic-adapter/，二进制在 /usr/bin，
+# 因此先看同目录，再退回 PATH。
 BIN="$DIR/subsonic-adapter-go"
+if [ ! -x "$BIN" ]; then
+  BIN=$(command -v subsonic-adapter-go 2>/dev/null || true)
+fi
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/subsonic-adapter"
 LOG_FILE="$LOG_DIR/adapter.log"
 PID_FILE="$LOG_DIR/adapter.pid"

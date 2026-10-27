@@ -4,12 +4,32 @@ on:
   push:
     tags:
       - 'v*'
+  # 需要在不打 tag 的情况下验证打包流程时手动触发（手动触发只出产物，不发 Release）
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（如 v1.0.0）'
+        required: true
+        default: 'v0.0.0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # tag 触发取 tag 名（v1.0.0），手动触发取输入值；build.sh 会自行去掉 v 前缀
+  PACKAGE_VERSION: ${{ inputs.version || github.ref_name }}
 
 jobs:
   build:
     name: Build ${{ matrix.arch }} packages
     runs-on: ubuntu-latest
     strategy:
+      # 单架构失败不取消另一架构，尽量留下可用的安装包
+      fail-fast: false
       matrix:
         arch: [amd64, arm64]
     
@@ -20,21 +40,22 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          # 跟随 go.mod 的版本声明，避免工作流与代码要求脱节
+          go-version-file: subsonic-adapter-go/go.mod
           cache: true
           cache-dependency-path: subsonic-adapter-go/go.sum
 
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          # dpkg-dev 用于 dpkg-deb，rpm 用于 rpmbuild
+          # dpkg-dev 提供 dpkg-deb，rpm 提供 rpmbuild
           sudo apt-get install -y dpkg-dev rpm
 
       - name: Build packages
         working-directory: subsonic-adapter-go
         env:
           TARGET_ARCH: ${{ matrix.arch }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ env.PACKAGE_VERSION }}
         run: |
           chmod +x packaging/build.sh
           # 构建 deb 和 rpm 包
@@ -53,3 +74,33 @@ jobs:
           name: subsonic-adapter-${{ matrix.arch }}-rpm
           path: subsonic-adapter-go/dist/*.rpm
           if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: build
+    # 只有 tag 推送才发 Release；手动触发只保留构建产物
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum ./*.deb ./*.rpm > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.deb
+            dist/*.rpm
+            dist/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          # 形如 v1.0.0-rc1 的预发布 tag 自动标记为 prerelease
+          prerelease: ${{ contains(github.ref_name, '-') }}

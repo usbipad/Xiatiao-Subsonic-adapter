@@ -35,6 +35,12 @@ TARGET_ARCH=arm64 VERSION=1.0.0 ./packaging/build.sh all
 ```
 产物将生成在 `dist/` 目录下。
 
+推送到 `v*` tag 时，GitHub Actions 会自动为 `amd64`/`arm64` 构建安装包，并把 deb、rpm 与 `SHA256SUMS.txt` 发布到对应的 Release：
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 > 更多详细的使用说明、启动方式及配置指南，请参阅 [subsonic-adapter-go/README.md](subsonic-adapter-go/README.md)。
 
 ## 📚 相关文档

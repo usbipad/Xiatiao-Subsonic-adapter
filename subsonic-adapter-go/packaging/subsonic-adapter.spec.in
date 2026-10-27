@@ -4,6 +4,8 @@ Release:        1%{?dist}
 Summary:        QQ Music to Subsonic gateway
 License:        MIT
 URL:            https://github.com/usbipad/xiatiao-player
+# 由 packaging/build.sh 生成的源码包，顶层目录为 %{name}-%{version}
+Source0:        %{name}-%{version}.tar.gz
 Requires:       xdg-utils
 
 # 二进制以静态链接方式随源码包提供，此处无需编译器依赖。
@@ -27,10 +29,13 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user
 mkdir -p %{buildroot}%{_datadir}/subsonic-adapter
+mkdir -p %{buildroot}%{_mandir}/man1
 install -m 0755 @BIN_NAME@ %{buildroot}%{_bindir}/@BIN_NAME@
 install -m 0755 launch.sh %{buildroot}%{_datadir}/subsonic-adapter/launch.sh
 install -m 0644 subsonic-adapter.desktop %{buildroot}%{_datadir}/applications/subsonic-adapter.desktop
 install -m 0644 subsonic-adapter.service %{buildroot}%{_prefix}/lib/systemd/user/subsonic-adapter.service
+install -m 0644 subsonic-adapter.1 %{buildroot}%{_mandir}/man1/@BIN_NAME@.1
+gzip -9n %{buildroot}%{_mandir}/man1/@BIN_NAME@.1
 
 # 图标：安装到 hicolor 主题各尺寸目录
 for size in 16 24 32 48 64 128 256 512 1024; do
@@ -53,6 +58,7 @@ done
 %{_datadir}/subsonic-adapter/launch.sh
 %{_datadir}/applications/subsonic-adapter.desktop
 %{_prefix}/lib/systemd/user/subsonic-adapter.service
+%{_mandir}/man1/@BIN_NAME@.1.gz
 %{_datadir}/icons/hicolor/16x16/apps/subsonic-adapter.png
 %{_datadir}/icons/hicolor/24x24/apps/subsonic-adapter.png
 %{_datadir}/icons/hicolor/32x32/apps/subsonic-adapter.png
