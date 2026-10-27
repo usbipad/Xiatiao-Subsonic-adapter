@@ -1,33 +1,46 @@
-# Xiatiao Subsonic API Adapter
+# Xiatiao Subsonic Adapter
 
-本项目是虾条播放器 (Xiatiao Player) 的专属 Subsonic API 兼容网关，主要用于将上游音乐源（如 QQ 音乐等）转换为标准 Subsonic 协议，使虾条播放器及其他兼容 Subsonic 的客户端能够无缝播放。
+一个轻量级的网关服务，将上游音乐 API（如 QQ 音乐）转换为标准 Subsonic 协议。专为虾条播放器设计，同时也兼容任何支持 Subsonic API 的客户端。
 
-## 📂 项目结构
+## ✨ 主要特性
 
-```
-.
-├── subsonic-adapter-go/      # 核心网关服务 (Go 语言实现)
-│   ├── packaging/            # 打包脚本与配置 (支持 deb/rpm, amd64/arm64)
-│   ├── main.go               # 程序入口
-│   └── ...                   # 其他源码文件
-├── SUBSONIC_API.md           # 虾条播放器与后端的接口契约文档 (供后端开发参考)
-├── .github/workflows/        # GitHub Actions 自动化构建流程
-├── .gitignore                # Git 忽略规则
-└── README.md                 # 本文件
-```
+*   **协议兼容**：完整实现 Subsonic API 1.16.1 标准。
+*   **多架构支持**：原生支持 `amd64` 与 `arm64` (aarch64) 架构。
+*   **静态编译**：无外部 C 依赖，单二进制文件即可运行。
+*   **便捷打包**：提供脚本一键生成 `.deb` 与 `.rpm` 安装包。
 
 ## 🚀 快速开始
 
-核心服务位于 `subsonic-adapter-go` 目录。请进入该目录查看详细的使用和构建说明：
-
+### 1. 获取源码
 ```bash
-cd subsonic-adapter-go
-cat README.md
+git clone https://github.com/usbipad/Xiatiao-Subsonic-adapter.git
+cd Xiatiao-Subsonic-adapter/subsonic-adapter-go
 ```
 
-## 📦 自动化构建
+### 2. 本地编译
+确保已安装 **Go 1.21+**，然后执行：
+```bash
+go build -o subsonic-adapter-go .
+./subsonic-adapter-go
+```
 
-本项目配置了 GitHub Actions，当您推送 `v*` 格式的 Git Tag 时，会自动并行构建 `amd64` 和 `arm64` 架构的 `.deb` 与 `.rpm` 安装包。
+### 3. 打包安装包 (可选)
+如果您需要生成系统安装包，可以使用内置脚本：
+```bash
+# 构建 amd64 版本
+./packaging/build.sh all
+
+# 交叉编译 arm64 版本
+TARGET_ARCH=arm64 VERSION=1.0.0 ./packaging/build.sh all
+```
+产物将生成在 `dist/` 目录下。
+
+> 更多详细的使用说明、启动方式及配置指南，请参阅 [subsonic-adapter-go/README.md](subsonic-adapter-go/README.md)。
+
+## 📚 相关文档
+
+*   **[SUBSONIC_API.md](SUBSONIC_API.md)**: 虾条播放器与后端的接口契约，供开发者参考。
+*   **[packaging/README.md](subsonic-adapter-go/packaging/README.md)**: 关于打包脚本的详细参数说明。
 
 ## 🙏 致谢
 
