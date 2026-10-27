@@ -225,20 +225,27 @@ build_rpm() {
   rm -rf "$TOP"
   mkdir -p "$TOP"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
-  # 以源码包形式喂给 rpmbuild：tar 里含二进制与辅助文件
-  STAGE="$BUILD_DIR/stage/$PKG_NAME-$VERSION"
-  mkdir -p "$STAGE/icons"
-  install -m 0755 "$BUILD_DIR/$BIN_NAME" "$STAGE/$BIN_NAME"
-  install -m 0755 "$ROOT_DIR/launch.sh" "$STAGE/launch.sh"
-  install -m 0644 "$SCRIPT_DIR/$PKG_NAME.desktop" "$STAGE/$PKG_NAME.desktop"
-  install -m 0644 "$SCRIPT_DIR/$PKG_NAME.service" "$STAGE/$PKG_NAME.service"
+  # 准备 RPM 源码包内容
+  STAGE="$BUILD_DIR/stage"
+  SRC_DIR="$STAGE/$PKG_NAME-$VERSION"
+  rm -rf "$STAGE"
+  mkdir -p "$SRC_DIR/icons"
+  
+  install -m 0755 "$BUILD_DIR/$BIN_NAME" "$SRC_DIR/$BIN_NAME"
+  install -m 0755 "$ROOT_DIR/launch.sh" "$SRC_DIR/launch.sh"
+  install -m 0644 "$SCRIPT_DIR/$PKG_NAME.desktop" "$SRC_DIR/$PKG_NAME.desktop"
+  install -m 0644 "$SCRIPT_DIR/$PKG_NAME.service" "$SRC_DIR/$PKG_NAME.service"
   for size in 16 24 32 48 64 128 256 512 1024; do
-    install -m 0644 "$SCRIPT_DIR/icons/$PKG_NAME-$size.png" "$STAGE/icons/$PKG_NAME-$size.png"
+    install -m 0644 "$SCRIPT_DIR/icons/$PKG_NAME-$size.png" "$SRC_DIR/icons/$PKG_NAME-$size.png"
   done
-  tar -C "$BUILD_DIR/stage" -czf "$TOP/SOURCES/$PKG_NAME-$VERSION.tar.gz" "$PKG_NAME-$VERSION"
+  
+  # 生成 tar.gz，确保路径正确
+  tar -C "$STAGE" -czf "$TOP/SOURCES/$PKG_NAME-$VERSION.tar.gz" "$PKG_NAME-$VERSION"
 
   sed -e "s|@VERSION@|$VERSION|g" \
+      -e "s|@DEB_VERSION@|$DEB_VERSION|g" \
       -e "s|@BIN_NAME@|$BIN_NAME|g" \
+      -e "s|@ARCH_RPM@|$ARCH_RPM|g" \
       "$SCRIPT_DIR/$PKG_NAME.spec.in" >"$TOP/SPECS/$PKG_NAME.spec"
 
   rpmbuild --define "_topdir $TOP" -bb "$TOP/SPECS/$PKG_NAME.spec" >/dev/null

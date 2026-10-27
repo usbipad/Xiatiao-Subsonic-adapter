@@ -1,10 +1,10 @@
 Name:           subsonic-adapter
-Version:        @VERSION@
+Version:        @DEB_VERSION@
 Release:        1%{?dist}
 Summary:        QQ Music to Subsonic gateway
 License:        MIT
 URL:            https://github.com/usbipad/xiatiao-player
-BuildArch:      x86_64
+BuildArch:      @ARCH_RPM@
 Requires:       xdg-utils
 
 # 二进制以静态链接方式随源码包提供，此处无需编译器依赖。
@@ -65,5 +65,5 @@ done
 %{_datadir}/icons/hicolor/1024x1024/apps/subsonic-adapter.png
 
 %changelog
-* Mon Oct 26 2026 Subsonic Adapter <noreply@example.com> - @VERSION@-1
+* Mon Oct 26 2026 Subsonic Adapter <noreply@example.com> - @DEB_VERSION@-1
 - Initial package
